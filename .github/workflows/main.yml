@@ -1,0 +1,51 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+  release:
+    types: [published]
+
+env:
+  PROJECT_TYPE: KEXT
+
+jobs:
+  build:
+    name: Build
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/checkout@v4
+        with:
+          repository: acidanthera/MacKernelSDK
+          path: MacKernelSDK
+
+      - name: Build libkmod dependency
+        run: |
+          cd MacKernelSDK/Library/kmod
+          xcodebuild -arch x86_64 -configuration Release
+
+      - name: Build RealtekRTL8111
+        run: xcodebuild -arch x86_64 -configuration Release
+
+      - name: Package Kext
+        run: |
+          cd build/Release
+          zip -r RealtekRTL8111.zip RealtekRTL8111.kext
+
+      - name: Upload to Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: RealtekRTL8111-Artifact
+          path: build/Release/*.zip
+
+      - name: Upload to Release
+        if: github.event_name == 'release'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: build/Release/*.zip
+          tag: ${{ github.ref }}
+          file_glob: true
