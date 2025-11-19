@@ -538,8 +538,8 @@ bool RTL8111::initRTL8111()
             rtl8168_rar_set(tp, (UInt8 *)macAddr);
         }
     }
-    if (!is_valid_ether_addr((UInt8 *) macAddr)) {
-        IOLog("Using fallback MAC.\n");
+    if (fallBackMacAddr.bytes != nullptr && is_valid_ether_addr((UInt8 *) fallBackMacAddr.bytes)) {
+        IOLog("Force use fallback MAC.\n");
         rtl8168_rar_set(tp, fallBackMacAddr.bytes);
     }
     for (i = 0; i < MAC_ADDR_LEN; i++) {
